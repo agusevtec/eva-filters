@@ -1,6 +1,6 @@
 #pragma once
 
-#include "evafRingBuffer.h"
+#include <evaRingBuffer.h>
 
 namespace evaf
 {
@@ -28,7 +28,7 @@ namespace evaf
         static_assert(N >= 2 && N <= 5, "N out of range 2..5");
 
     private:
-        RingBuffer<signed short, N * N> mRing;
+        eva::RingBuffer<signed short, N * N> mRing;
         signed short mMaxBuffer[N];
         signed short mMinBuffer[N];
 
