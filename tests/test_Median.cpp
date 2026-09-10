@@ -1,10 +1,10 @@
 #include <AUnit.h>
 #include "MockReader.h"
-#include "../src/evafMedian.h"
+#include <evafMedian.h>
 
 test(Median_SpikeSuppression)
 {
-    evaf::Median<evaf_test::MockReader, 5> filter(13); // Forward pin 13 to MockReader
+    evaf::Median<MockReader, 5> filter(13); // Forward pin 13 to MockReader
 
     filter.mockValue = 100;
     for (int i = 0; i < 4; ++i)

@@ -1,10 +1,10 @@
 #include <AUnit.h>
 #include "MockReader.h"
-#include "../src/evafSlidingWindow.h"
+#include <evafSlidingWindow.h>
 
 test(SlidingWindow_Averaging)
 {
-    evaf::SlidingWindow<evaf_test::MockReader, 4> filter;
+    evaf::SlidingWindow<MockReader, 4> filter;
 
     filter.mockValue = 100;
     filter.getValue();

@@ -42,6 +42,11 @@ namespace evaf
             return mBuffer[physicalPos];
         }
 
+        bool isEmpty() const
+        {
+            return mSize == 0;
+        }
+
         bool isFull() const
         {
             return mSize == N;

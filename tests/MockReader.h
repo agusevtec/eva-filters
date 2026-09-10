@@ -1,7 +1,5 @@
 #pragma once
 
-namespace evaf_test
-{
     class MockReader
     {
     public:
@@ -16,5 +14,3 @@ namespace evaf_test
             return mockValue;
         }
     };
-
-}

@@ -1,10 +1,10 @@
 #include <AUnit.h>
 #include "MockReader.h"
-#include "../src/evafAdaptiveSmooth.h"
+#include <evafAdaptiveSmooth.h>
 
 test(AdaptiveSmooth_DynamicTau)
 {
-    evaf::AdaptiveSmooth<evaf_test::MockReader, 1, 10> filter;
+    evaf::AdaptiveSmooth<MockReader, 1, 10> filter;
 
     filter.mockValue = 0;
     filter.getValue();
