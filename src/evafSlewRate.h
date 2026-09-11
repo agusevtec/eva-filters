@@ -37,6 +37,12 @@ namespace evaf
          */
         signed short getValue()
         {
+            if (!TReader::isValid())
+            {
+                reset();
+                return 0;
+            }
+
             signed short target = TReader::getValue();
 
             if (!mInitialized)
@@ -65,7 +71,7 @@ namespace evaf
         void reset(signed short initialValue = 0)
         {
             mCurrentValue = initialValue;
-            mInitialized = true;
+            mInitialized = false;
         }
 
         /**

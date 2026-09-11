@@ -54,6 +54,17 @@ namespace evaf
          */
         signed short getValue()
         {
+            if (!TReader::isValid())
+            {
+                mRing.clear();
+                for (unsigned char i = 0; i < N; ++i)
+                {
+                    mMaxBuffer[i] = 0;
+                    mMinBuffer[i] = 0;
+                }
+                return 0;
+            }
+
             signed short value = TReader::getValue();
             mRing.put(value);
 

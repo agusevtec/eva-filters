@@ -69,6 +69,12 @@ namespace evaf
          */
         signed short getValue()
         {
+            if (!TReader::isValid())
+            {
+                reset();
+                return 0;
+            }
+
             mBuffer[mIndex] = constrain(TReader::getValue(), -1000, 1000);
             mIndex++;
 

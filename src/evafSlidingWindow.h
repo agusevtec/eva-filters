@@ -32,6 +32,13 @@ namespace evaf
          */
         signed short getValue()
         {
+            if (!TReader::isValid())
+            {
+                mRing.clear();
+                mSum = 0;
+                return 0;
+            }
+
             signed short value = TReader::getValue();
 
             if (mRing.isFull())

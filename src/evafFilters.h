@@ -1,6 +1,6 @@
 #pragma once
 
-#include "evafHeartbeatDecor.h"
+#include "evafRythmicDecor.h"
 #include "evafMedian.h"
 #include "evafExponentialSmooth.h"
 #include "evafAdaptiveSmooth.h"

@@ -30,7 +30,6 @@ namespace evaf
                       "tMaxTimeConstantTicks must be >= tMinTimeConstantTicks");
 
     private:
-
         unsigned short mMinTimeConstantTicks;
         unsigned short mMaxTimeConstantTicks;
 
@@ -66,6 +65,12 @@ namespace evaf
          */
         signed short getValue()
         {
+            if (!TReader::isValid())
+            {
+                reset();
+                return 0;
+            }
+
             mTargetValue = constrain(TReader::getValue(), -1000, 1000);
             unsigned short currentTau = calculateTimeConstant();
 
@@ -82,6 +87,12 @@ namespace evaf
             }
 
             return mCurrentValue;
+        }
+
+        void reset(signed short initialValue = 0)
+        {
+            mTargetValue = initialValue;
+            mCurrentValue = initialValue;
         }
 
         void setMinTimeConstantTicks(unsigned short value)
