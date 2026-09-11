@@ -13,4 +13,8 @@
         {
             return mockValue;
         }
+        bool isValid()
+        {
+            return true;
+        }
     };
