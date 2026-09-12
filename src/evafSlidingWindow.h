@@ -7,6 +7,8 @@ namespace evaf
     /**
      * @brief Reader decorator applying a moving average (sliding window) filter.
      *
+     * No input or output clamping is applied.
+     *
      * @tparam TReader Underlying reader class (must implement getValue())
      * @tparam N Window size (number of values to average). Must be >= 1.
      *
@@ -22,9 +24,17 @@ namespace evaf
         eva::RingBuffer<signed short, N> mRing;
         signed long mSum = 0;
 
+        void reset()
+        {
+            mRing.clear();
+            mSum = 0;
+        }
+
     public:
         template <typename... Args>
-        SlidingWindow(Args &&...args) : TReader(args...) {}
+        SlidingWindow(Args... args) : TReader(args...)
+        {
+        }
 
         /**
          * @brief Gets moving average filtered value.
@@ -34,8 +44,7 @@ namespace evaf
         {
             if (!TReader::isValid())
             {
-                mRing.clear();
-                mSum = 0;
+                reset();
                 return 0;
             }
 

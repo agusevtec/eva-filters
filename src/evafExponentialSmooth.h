@@ -10,6 +10,8 @@ namespace evaf
      * Formula: Y[k] = alpha * X[k] + (1 - alpha) * Y[k-1]
      * Uses fixed-point arithmetic (scaled by 1000) for fast execution on MCUs.
      *
+     * No input or output clamping is applied.
+     *
      * @tparam TReader Underlying reader class (must implement getValue())
      * @tparam tAlpha Smoothing factor from 1 to 1000 (1000 = no filtering, 100 = heavy smoothing)
      */
@@ -23,13 +25,18 @@ namespace evaf
         signed long mCurrentValue = 0;
         bool mInitialized = false;
 
+        void reset()
+        {
+            mCurrentValue = 0;
+            mInitialized = false;
+        }
+
     public:
-        /**
-         * @brief Constructs ExponentialSmooth with default template alpha
-         * @param args Additional arguments passed to TReader constructor
-         */
+        ExponentialSmooth()
+            : mAlpha(tAlpha) {}
+
         template <typename... Args>
-        ExponentialSmooth(unsigned short aAlpha = tAlpha, Args... args)
+        ExponentialSmooth(unsigned short aAlpha, Args ...args)
             : TReader(args...), mAlpha(constrain(aAlpha, 1, 1000)) {}
 
         /**
@@ -53,19 +60,10 @@ namespace evaf
                 return raw;
             }
 
-            mCurrentValue = ((signed long)mAlpha * raw * 1000 + (1000 - (signed long)mAlpha) * mCurrentValue) / 1000;
+            signed long diff = (signed long)raw * 1000 - mCurrentValue;
+            mCurrentValue += diff * (signed long)mAlpha / 1000;
 
             return static_cast<signed short>(mCurrentValue / 1000);
-        }
-
-        /**
-         * @brief Resets the filter state to a new initial value
-         * @param initialValue Initial value to seed the filter
-         */
-        void reset(signed short initialValue = 0)
-        {
-            mCurrentValue = (signed long)initialValue * 1000;
-            mInitialized = false;
         }
 
         /**

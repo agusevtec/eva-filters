@@ -16,6 +16,8 @@ namespace evaf
      * - maximin = max of chunk minimums (opening operation)
      * - output = (minimax + maximin) / 2
      *
+     * No input or output clamping is applied.
+     *
      * @tparam TReader Underlying reader class (must implement getValue())
      * @tparam N Number of chunks and chunk size (total buffer size = N * N)
      *
@@ -32,15 +34,40 @@ namespace evaf
         signed short mMaxBuffer[N];
         signed short mMinBuffer[N];
 
-    public:
-        template <typename... Args>
-        Minmax(Args &&...args) : TReader(args...)
+        void reset()
         {
+            mRing.clear();
             for (unsigned char i = 0; i < N; ++i)
             {
                 mMaxBuffer[i] = 0;
                 mMinBuffer[i] = 0;
             }
+        }
+
+        signed short getMinimax() const
+        {
+            signed short result = mMaxBuffer[0];
+            for (unsigned char i = 1; i < N; ++i)
+                if (mMaxBuffer[i] < result)
+                    result = mMaxBuffer[i];
+            return result;
+        }
+
+        signed short getMaximin() const
+        {
+            signed short result = mMinBuffer[0];
+            for (unsigned char i = 1; i < N; ++i)
+                if (mMinBuffer[i] > result)
+                    result = mMinBuffer[i];
+            return result;
+        }
+
+    public:
+
+        template <typename... Args>
+        Minmax(Args ...args): TReader(args...)
+        {
+            reset();
         }
 
         /**
@@ -56,12 +83,7 @@ namespace evaf
         {
             if (!TReader::isValid())
             {
-                mRing.clear();
-                for (unsigned char i = 0; i < N; ++i)
-                {
-                    mMaxBuffer[i] = 0;
-                    mMinBuffer[i] = 0;
-                }
+                reset();
                 return 0;
             }
 
@@ -93,25 +115,6 @@ namespace evaf
             }
 
             return value;
-        }
-
-    private:
-        signed short getMinimax() const
-        {
-            signed short result = mMaxBuffer[0];
-            for (unsigned char i = 1; i < N; ++i)
-                if (mMaxBuffer[i] < result)
-                    result = mMaxBuffer[i];
-            return result;
-        }
-
-        signed short getMaximin() const
-        {
-            signed short result = mMinBuffer[0];
-            for (unsigned char i = 1; i < N; ++i)
-                if (mMinBuffer[i] > result)
-                    result = mMinBuffer[i];
-            return result;
         }
     };
 

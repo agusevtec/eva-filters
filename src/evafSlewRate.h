@@ -9,8 +9,10 @@ namespace evaf
      *
      * Prevents sharp steps by capping maximum delta per call tick.
      *
+     * No input or output clamping is applied.
+     *
      * @tparam TReader Underlying reader class (must implement getValue())
-     * @tparam tMaxStepPerTick Maximum allowed change per call tick (1..1000). Default: 50
+     * @tparam tMaxStepPerTick Maximum allowed change per call tick. Default: 50
      */
     template <class TReader, unsigned short tMaxStepPerTick = 50>
     class SlewRate : public TReader
@@ -22,13 +24,18 @@ namespace evaf
         signed short mCurrentValue = 0;
         bool mInitialized = false;
 
+        void reset()
+        {
+            mCurrentValue = 0;
+            mInitialized = false;
+        }
+
     public:
-        /**
-         * @brief Constructs SlewRate with template step limit
-         * @param args Additional arguments passed to TReader constructor
-         */
+        SlewRate()
+            : mMaxStep(tMaxStepPerTick) {}
+
         template <typename... Args>
-        SlewRate(unsigned short aMaxStepPerTick = tMaxStepPerTick, Args &&...args)
+        SlewRate(unsigned short aMaxStepPerTick, Args... args)
             : TReader(args...), mMaxStep(aMaxStepPerTick) {}
 
         /**
@@ -52,26 +59,16 @@ namespace evaf
                 return target;
             }
 
-            signed short delta = target - mCurrentValue;
+            signed long delta = (signed long)target - (signed long)mCurrentValue;
 
-            if (delta > (signed short)mMaxStep)
-                mCurrentValue += mMaxStep;
-            else if (delta < -(signed short)mMaxStep)
-                mCurrentValue -= mMaxStep;
+            if (delta > (signed long)mMaxStep)
+                mCurrentValue += (signed short)mMaxStep;
+            else if (delta < -(signed long)mMaxStep)
+                mCurrentValue -= (signed short)mMaxStep;
             else
                 mCurrentValue = target;
 
             return mCurrentValue;
-        }
-
-        /**
-         * @brief Resets current filter value instantly
-         * @param initialValue Initial target value
-         */
-        void reset(signed short initialValue = 0)
-        {
-            mCurrentValue = initialValue;
-            mInitialized = false;
         }
 
         /**

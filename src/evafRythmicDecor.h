@@ -7,6 +7,8 @@ namespace evaf
     /**
      * @brief Decorator that periodically polls an underlying TReader via Heartbeat and caches the result.
      *
+     * No input or output clamping is applied.
+     *
      * @tparam TReader Input signal reader type
      * @tparam tIntervalMs Periodic update interval in milliseconds
      */
@@ -16,6 +18,11 @@ namespace evaf
     private:
         signed short mCachedValue = 0;
 
+        void reset()
+        {
+            mCachedValue = 0;
+        }
+
     protected:
         void onHeartbeat() override
         {
@@ -23,11 +30,18 @@ namespace evaf
         }
 
     public:
+        RythmicDecor()
+            : eva::Heartbeat(tIntervalMs)
+        {
+            reset();
+        }
+
         template <typename... Args>
-        RythmicDecor(unsigned short intervalMs = tIntervalMs, Args &&...args)
+        RythmicDecor(unsigned short intervalMs, Args... args)
             : TReader(args...),
               eva::Heartbeat(intervalMs)
         {
+            reset();
         }
 
         /**
