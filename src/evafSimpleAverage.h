@@ -16,7 +16,7 @@ namespace evaf
      *       Before that, values pass through unchanged.
      */
     template <class TReader, unsigned short N>
-    class SlidingWindow : public TReader
+    class SimpleAverage : public TReader
     {
         static_assert(N >= 1 && N <= 32, "N out of range 1..32");
 
@@ -32,7 +32,7 @@ namespace evaf
 
     public:
         template <typename... Args>
-        SlidingWindow(Args... args) : TReader(args...)
+        SimpleAverage(Args... args) : TReader(args...)
         {
         }
 

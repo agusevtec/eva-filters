@@ -13,7 +13,7 @@ namespace evaf
      * @tparam tIntervalMs Periodic update interval in milliseconds
      */
     template <class TReader, unsigned short tIntervalMs>
-    class RythmicDecor : public virtual eva::Heartbeat, public TReader
+    class Sampled : public virtual eva::Heartbeat, public TReader
     {
     private:
         signed short mCachedValue = 0;
@@ -30,14 +30,14 @@ namespace evaf
         }
 
     public:
-        RythmicDecor()
+        Sampled()
             : eva::Heartbeat(tIntervalMs)
         {
             reset();
         }
 
         template <typename... Args>
-        RythmicDecor(unsigned short intervalMs, Args... args)
+        Sampled(unsigned short intervalMs, Args... args)
             : TReader(args...),
               eva::Heartbeat(intervalMs)
         {

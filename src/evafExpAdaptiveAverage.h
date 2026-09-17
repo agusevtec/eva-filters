@@ -26,7 +26,7 @@ namespace evaf
     template <class TReader,
               unsigned short tMinTimeConstantTicks = kDefaultMinTimeConstantTicks,
               unsigned short tMaxTimeConstantTicks = kDefaultMaxTimeConstantTicks>
-    class AdaptiveSmooth : public TReader
+    class ExpAdaptiveAverage : public TReader
     {
         static_assert(tMinTimeConstantTicks >= kMinTimeConstantLimit && tMinTimeConstantTicks <= kMaxTimeConstantLimit,
                       "tMinTimeConstantTicks out of range");
@@ -63,7 +63,7 @@ namespace evaf
         }
 
     public:
-        AdaptiveSmooth()
+        ExpAdaptiveAverage()
             : mMinTimeConstantTicks(tMinTimeConstantTicks),
               mMaxTimeConstantTicks(tMaxTimeConstantTicks),
               mDeadzone(kDefaultDeadzone)
@@ -71,7 +71,7 @@ namespace evaf
         }
 
         template <typename... Args>
-        AdaptiveSmooth(unsigned short aMinTimeConstantTicks,
+        ExpAdaptiveAverage(unsigned short aMinTimeConstantTicks,
                        unsigned short aMaxTimeConstantTicks,
                        unsigned short aDeadzone,
                        Args ...args)

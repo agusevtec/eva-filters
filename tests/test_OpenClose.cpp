@@ -1,10 +1,10 @@
 #include <AUnit.h>
 #include "MockReader.h"
-#include <evafMinmax.h>
+#include <evafOpenClose.h>
 
 test(MinMax_OutlierTrimming)
 {
-    evaf::Minmax<MockReader, 2> filter;
+    evaf::OpenClose<MockReader, 5> filter;
 
     for (int i = 0; i < 4; ++i)
     {

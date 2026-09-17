@@ -1,9 +1,8 @@
 #pragma once
 
-#include "evafRythmicDecor.h"
 #include "evafMedian.h"
-#include "evafExponentialSmooth.h"
-#include "evafAdaptiveSmooth.h"
+#include "evafExponentialAverage.h"
+#include "evafAdaptiveExpAverage.h"
 #include "evafSlewRate.h"
-#include "evafSlidingWindow.h"
-#include "evafMinmax.h"
+#include "evafSimpleAverage.h"
+#include "evafOpenClose.h"

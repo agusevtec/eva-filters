@@ -16,7 +16,7 @@ namespace evaf
      * @tparam tAlpha Smoothing factor from 1 to 1000 (1000 = no filtering, 100 = heavy smoothing)
      */
     template <class TReader, unsigned short tAlpha = 200>
-    class ExponentialSmooth : public TReader
+    class ExponentialAverage : public TReader
     {
         static_assert(tAlpha >= 1 && tAlpha <= 1000, "tAlpha must be between 1 and 1000");
 
@@ -32,11 +32,11 @@ namespace evaf
         }
 
     public:
-        ExponentialSmooth()
+        ExponentialAverage()
             : mAlpha(tAlpha) {}
 
         template <typename... Args>
-        ExponentialSmooth(unsigned short aAlpha, Args ...args)
+        ExponentialAverage(unsigned short aAlpha, Args ...args)
             : TReader(args...), mAlpha(constrain(aAlpha, 1, 1000)) {}
 
         /**
