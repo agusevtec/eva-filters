@@ -3,11 +3,11 @@
 #include <evaHeartbeat.h>
 
 // Подключаем заголовочные файлы фильтров
-#include <evafAdaptiveSmooth.h>
+#include <evafExpAdaptiveAverage.h>
 #include <evafMedian.h>
-#include <evafMinmax.h>
-#include <evafSlidingWindow.h>
-#include <evafExponentialSmooth.h>
+#include <evafOpenClose.h>
+#include <evafSimpleAverage.h>
+#include <evafExponentialAverage.h>
 #include <evafSlewRate.h>
 
 using namespace eva;
@@ -26,6 +26,10 @@ public:
     signed short getValue() const
     {
         return g_rawSignal;
+    }
+    bool isValid()
+    {
+      return true;
     }
 };
 
@@ -95,19 +99,19 @@ SignalGenerator generator;
 // ============================================================================
 
 // 1. Адаптивный сглаживающий фильтр (10ms - 150ms)
-evaf::AdaptiveSmooth<GlobalVar, 10, 150> adaptiveSmoothFilter;
+evaf::ExpAdaptiveAverage<GlobalVar, 10, 150> adaptiveSmoothFilter;
 
 // 2. Медианный фильтр (окно = 5 элементов)
 evaf::Median<GlobalVar, 3> medianFilter;
 
 // 3. Морфологический MinMax фильтр (N = 3, буфер N*N = 9)
-evaf::Minmax<GlobalVar, 2> minmaxFilter;
+evaf::OpenClose<GlobalVar, 13> minmaxFilter;
 
 // 4. Скользящее среднее (окно = 8 элементов)
-evaf::SlidingWindow<GlobalVar, 3> slidingWindowFilter;
+evaf::SimpleAverage<GlobalVar, 3> slidingWindowFilter;
 
 // 5. Экспоненциальный фильтр EMA (alpha = 150 / 1000)
-evaf::ExponentialSmooth<GlobalVar, 500> exponentialSmoothFilter;
+evaf::ExponentialAverage<GlobalVar, 500> exponentialSmoothFilter;
 
 // 6. Ограничитель скорости изменения (макс. шаг 30 ед. за тик 10ms)
 evaf::SlewRate<GlobalVar, 300> slewRateFilter;
@@ -125,19 +129,19 @@ protected:
     {
         // Печать в формате Serial Plotter: сырое значение и результат каждого фильтра
         Serial.print("-1000 1000 3000 ");
-        Serial.print(g_rawSignal );//+ 2000);
+        Serial.print(g_rawSignal + 2000);
         // Serial.print(' ');
         // Serial.print(adaptiveSmoothFilter.getValue());
         // Serial.print(' ');
         // Serial.print(medianFilter.getValue());
-        //Serial.print(' ');
-        //Serial.print(minmaxFilter.getValue());
+        Serial.print(' ');
+        Serial.print(minmaxFilter.getValue());
         // Serial.print(' ');
         // Serial.print(slidingWindowFilter.getValue());
         // Serial.print(' ');
         // Serial.print(exponentialSmoothFilter.getValue());
-        Serial.print(' ');
-        Serial.print(slewRateFilter.getValue());
+        // Serial.print(' ');
+        // Serial.print(slewRateFilter.getValue());
         Serial.println();
     }
 };
