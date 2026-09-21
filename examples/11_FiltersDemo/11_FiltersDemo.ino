@@ -6,6 +6,7 @@
 #include <evafExpAdaptiveAverage.h>
 #include <evafMedian.h>
 #include <evafOpenClose.h>
+#include <evafMinmax.h>
 #include <evafSimpleAverage.h>
 #include <evafExponentialAverage.h>
 #include <evafSlewRate.h>
@@ -105,7 +106,10 @@ evaf::ExpAdaptiveAverage<GlobalVar, 10, 150> adaptiveSmoothFilter;
 evaf::Median<GlobalVar, 3> medianFilter;
 
 // 3. Морфологический MinMax фильтр (N = 3, буфер N*N = 9)
-evaf::OpenClose<GlobalVar, 13> minmaxFilter;
+evaf::OpenClose<GlobalVar, 7> opencloseFilter;
+
+// 3. Морфологический MinMax фильтр (N = 3, буфер N*N = 9)
+evaf::Minmax<GlobalVar, 2> minmaxFilter;
 
 // 4. Скользящее среднее (окно = 8 элементов)
 evaf::SimpleAverage<GlobalVar, 3> slidingWindowFilter;
@@ -128,14 +132,16 @@ protected:
     void onHeartbeat() override
     {
         // Печать в формате Serial Plotter: сырое значение и результат каждого фильтра
-        Serial.print("-1000 1000 3000 ");
-        Serial.print(g_rawSignal + 2000);
+//        Serial.print("-1000 1000 3000 ");
+        Serial.print(g_rawSignal);
         // Serial.print(' ');
         // Serial.print(adaptiveSmoothFilter.getValue());
         // Serial.print(' ');
         // Serial.print(medianFilter.getValue());
         Serial.print(' ');
         Serial.print(minmaxFilter.getValue());
+        Serial.print(' ');
+        Serial.print(opencloseFilter.getValue());
         // Serial.print(' ');
         // Serial.print(slidingWindowFilter.getValue());
         // Serial.print(' ');

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Arduino.h>
+#include <evaRingBuffer.h>
 
 namespace evaf
 {
@@ -11,16 +11,12 @@ namespace evaf
     /**
      * @brief Reader decorator applying a morphological open-close filter.
      *
+     * Naive reference implementation used as a baseline for testing.
      * Computes morphological opening and closing of the sliding window and
      * returns their average:
-     * - opening = dilation(erosion(x)) - removes positive impulses shorter than N
-     * - closing = erosion(dilation(x)) - removes negative impulses shorter than N
+     * - opening = dilation(erosion(x))
+     * - closing = erosion(dilation(x))
      * - output  = (opening + closing) / 2
-     *
-     * Operates on every shift of the window, guaranteeing suppression of any
-     * impulse shorter than N regardless of alignment. Sliding min and max are
-     * maintained with monotonic deques, giving O(1) amortized cost per sample
-     * per operation.
      *
      * No input or output clamping is applied.
      *
@@ -32,93 +28,44 @@ namespace evaf
     {
         static_assert(tWindowSize >= kMinOpenCloseWindow && tWindowSize <= kMaxOpenCloseWindow,
                       "tWindowSize out of range");
-        static_assert(tWindowSize % 2 == 1,
-                      "tWindowSize must be odd");
 
     private:
-        /**
-         * @brief Sliding extremum tracker over a stream of signed shorts.
-         *
-         * Maintains a monotonic deque of indices into a fixed-size circular
-         * buffer. When the configured mode is minimum, the deque front always
-         * points to the smallest value currently in the window; when maximum,
-         * to the largest. Push is O(1) amortized.
-         */
-        struct ExtremumTracker
-        {
-            signed short buf[tWindowSize];
-            // Deque size must be tWindowSize + 1 to distinguish between empty and full states
-            unsigned short deque[tWindowSize + 1];
-            unsigned short bufHead = 0;
-            unsigned short dequeHead = 0;
-            unsigned short dequeTail = 0;
-            unsigned short count = 0;
-            bool isMin = true;
-
-            void reset(bool minMode)
-            {
-                bufHead = 0;
-                dequeHead = 0;
-                dequeTail = 0;
-                count = 0;
-                isMin = minMode;
-                for (unsigned short i = 0; i < tWindowSize; ++i)
-                    buf[i] = 0;
-            }
-
-            signed short push(signed short value)
-            {
-                const unsigned short pos = bufHead;
-                buf[pos] = value;
-
-                while (dequeHead != dequeTail)
-                {
-                    const unsigned short back = (dequeTail + (tWindowSize + 1) - 1) % (tWindowSize + 1);
-                    const signed short backVal = buf[deque[back]];
-                    if ((isMin && backVal >= value) || (!isMin && backVal <= value))
-                        dequeTail = back;
-                    else
-                        break;
-                }
-
-                deque[dequeTail] = pos;
-                dequeTail = (dequeTail + 1) % (tWindowSize + 1);
-
-                bufHead = (bufHead + 1) % tWindowSize;
-                if (count < tWindowSize)
-                    ++count;
-
-                if (count == tWindowSize)
-                {
-                    if (deque[dequeHead] == pos)
-                        dequeHead = (dequeHead + 1) % (tWindowSize + 1);
-                }
-
-                return buf[deque[dequeHead]];
-            }
-        };
-
-        ExtremumTracker mErosion;
-        ExtremumTracker mDilation;
-        ExtremumTracker mOpeningStage2;
-        ExtremumTracker mClosingStage2;
-        unsigned short mSampleCount = 0;
+        eva::RingBuffer<signed short, tWindowSize> mRaw;
+        eva::RingBuffer<signed short, tWindowSize> mErosion;
+        eva::RingBuffer<signed short, tWindowSize> mDilation;
 
         void reset()
         {
-            mErosion.reset(true);        // min
-            mDilation.reset(false);      // max
-            mOpeningStage2.reset(false); // max (dilation of erosion)
-            mClosingStage2.reset(true);  // min (erosion of dilation)
-            mSampleCount = 0;
+            mRaw.clear();
+            mErosion.clear();
+            mDilation.clear();
+        }
+
+        signed short minOf(const eva::RingBuffer<signed short, tWindowSize>& buf) const
+        {
+            signed short result = buf.get(0);
+            for (unsigned short i = 1; i < buf.size(); ++i)
+            {
+                signed short v = buf.get(i);
+                if (v < result)
+                    result = v;
+            }
+            return result;
+        }
+
+        signed short maxOf(const eva::RingBuffer<signed short, tWindowSize>& buf) const
+        {
+            signed short result = buf.get(0);
+            for (unsigned short i = 1; i < buf.size(); ++i)
+            {
+                signed short v = buf.get(i);
+                if (v > result)
+                    result = v;
+            }
+            return result;
         }
 
     public:
-        OpenClose()
-        {
-            reset();
-        }
-
         template <typename... Args>
         OpenClose(Args &&...args) : TReader(args...)
         {
@@ -143,21 +90,22 @@ namespace evaf
 
             const signed short raw = TReader::getValue();
 
-            // Stage 1: Compute Erosion and Dilation of raw stream
-            const signed short erosion = mErosion.push(raw);
-            const signed short dilation = mDilation.push(raw);
+            mRaw.put(raw);
 
-            // Stage 2: Compute Opening (Dilation of Erosion) and Closing (Erosion of Dilation)
-            const signed short opening = mOpeningStage2.push(erosion);
-            const signed short closing = mClosingStage2.push(dilation);
+            const signed short erosion  = minOf(mRaw);
+            const signed short dilation = maxOf(mRaw);
 
-            if (mSampleCount < tWindowSize)
-            {
-                ++mSampleCount;
+            mErosion.put(erosion);
+            mDilation.put(dilation);
+
+            if (!mRaw.isFull())
                 return raw;
-            }
 
-            return (opening + closing) / 2;
+            const signed short opening = maxOf(mErosion);
+            const signed short closing = minOf(mDilation);
+
+            return static_cast<signed short>(
+                ((signed long)opening + (signed long)closing) / 2);
         }
     };
 
