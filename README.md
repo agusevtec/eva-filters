@@ -1,86 +1,99 @@
-# EVA Filters (evaf)
+# EVA Filters (eva-filters)
 
-A lightweight, header-only C++ digital signal processing (DSP) library designed for the **Extremely Versatile Architecture (EVA)** ecosystem.
+C++ digital signal processing (DSP) library designed for the **EVA** ecosystem in Arduino.
 
-`EVA Filters` provides compile-time chainable filter decorators to clean, smooth, and constrain analog and digital signals. Built specifically for microcontrollers, it features **zero dynamic memory allocation** and operates entirely without `millis()` or hardware timer dependencies.
+`EVA Filters` provides compile-time chainable filter decorators to clean, smooth, and constrain analog and digital signals. 
 
 ---
 
 ## Key Concepts
 
-- **Standardized Range (`-1000..1000`)**: All filters are optimized around the standard EVA signal scale. Bipolar and unipolar signals map seamlessly to this range.
 - **Discrete Time (Call Ticks)**: Filters do not read system time. All time-dependent parameters (like time constants or slew limits) are configured in units of call ticks, making execution deterministic, lightweight, and independent of hardware timers.
-- **On-Demand Processing**: Filters process data inside `getValue()`. Unused filters consume zero CPU cycles.
-- **Decoupled Timing via `HeartbeatDecor`**: Time-dependent caching is cleanly separated from filter logic. Wrap any chain in `evaf::HeartbeatDecor` to enforce periodic updates.
+- **Decoupled Timing via `Sampled`**: Time-dependent caching is cleanly separated from filter logic. Wrap any chain in `evaf::Sampled` to enforce periodic updates. Between ticks, `Sampled` returns the cached value without touching the underlying reader.
+
 
 ---
 
 ## Available Filters
 
-All classes reside in the `evaf` namespace.
+All classes reside in the `evaf` namespace and follow the decorator pattern: each filter wraps a `TReader` that implements `signed short getValue()` and `bool isValid()`.
 
 | Filter Class | Description | Template Parameters |
 | :--- | :--- | :--- |
 | `evaf::Median` | Spike elimination over a sliding window | `<class TReader, unsigned char tWindowSize = 5>` |
-| `evaf::ExponentialSmooth` | Exponential Moving Average (EMA) filter | `<class TReader, unsigned short tTimeConstantTicks = 10>` |
-| `evaf::AdaptiveSmooth` | Dynamic EMA adjusting filter strength by error magnitude | `<class TReader, unsigned short tMinTimeConstantTicks = 1, unsigned short tMaxTimeConstantTicks = 15>` |
+| `evaf::SimpleAverage` | Simple Moving Average (SMA) over a sliding window | `<class TReader, unsigned char tWindowSize = 8>` |
+| `evaf::ExponentialAverage` | Exponential Moving Average (EMA) with fixed alpha | `<class TReader, unsigned short tAlpha = 200>` |
+| `evaf::AdaptiveAverage` | Dynamic EMA that adjusts smoothing by error magnitude | `<class TReader, unsigned short tMinTimeConstantTicks = 1, unsigned short tMaxTimeConstantTicks = 15, unsigned short tFullSpeedError = 200, unsigned short tIdleError = 5>` |
 | `evaf::SlewRate` | Rate limiter restricting maximum value delta per tick | `<class TReader, signed short tMaxStepPerTick = 30>` |
-| `evaf::SlidingWindow` | Simple Moving Average (SMA) filter | `<class TReader, unsigned char tWindowSize = 8>` |
-| `evaf::Minmax` | Trims min and max outlier values before averaging | `<class TReader, unsigned char tWindowSize = 5>` |
-| `evaf::HeartbeatDecor` | Caches filter outputs at a fixed time interval | `<class TReader, unsigned short tIntervalMs>` |
+| `evaf::Minmax` | Trims min and max outliers before averaging | `<class TReader, unsigned char tWindowSize = 5>` |
+| `evaf::OpenClose` | Morphological open-close filter (naive reference implementation) | `<class TReader, unsigned short tWindowSize = 5>` |
+| `evaf::Sampled` | Caches filter outputs at a fixed time interval | `<class TReader, unsigned short tIntervalMs>` |
+
+---
+
+## Parameter Notes
+
+- `tAlpha` (1..1000): EMA smoothing factor. `1000` = no filtering, `100` = heavy smoothing. Relationship to time constant: `alpha ≈ 1000 / tau`.
+- `tMinTimeConstantTicks` / `tMaxTimeConstantTicks`: time constant (in ticks) used by `AdaptiveAverage` when the error is large / small respectively.
+- `tFullSpeedError` / `tIdleError`: error thresholds (in reader units) that define the interpolation range for the adaptive time constant. Both are clamped at runtime to `1..30000`, and `tIdleError ≤ tFullSpeedError`.
+- `tMaxStepPerTick`: maximum absolute change of the output per call, in reader units.
+- `tWindowSize`: number of samples in the sliding window. Must be odd for `OpenClose`.
+- `tIntervalMs`: heartbeat period in milliseconds. Requires `eva::tac()` to be called regularly (see example).
 
 ---
 
 ## Quick Start
 
-### Installation
-1. Ensure `eva-core-sk` is installed in your Arduino libraries folder.
-2. Copy `EVA Filters` into your `libraries` directory.
-3. Include `<EVAFilters.h>` in your project.
 
 ### Example: Cleaned Joystick Input
 
 ```cpp
 #include <evaTac.h>
 #include <evaJoystick.h>
-#include <EVAFilters.h>
+#include <evaHeartbeat.h>
 
-// Build a zero-cost processing pipeline:
+#include <evafFilters.h>
+#include <evafSampled.h>
+
 // Raw ADC Pin -> Median Filter -> Exponential Smooth -> 10ms Heartbeat Cache
-using CleanedPinReader = evaf::HeartbeatDecor<
-    evaf::ExponentialSmooth<
-        evaf::Median<
-            eva::AnalogPinReader<A0, INPUT>,
-            5 // Window size = 5
-        >,
-        10 // Time constant = 10 ticks
+using CleanedPinReader = evaf::Sampled<
+  evaf::ExponentialAverage<
+    evaf::Median<
+      eva::AnalogPinReader<A0, INPUT>,
+      5  // Window size = 5
+      >,
+    200  // Alpha = 200 (moderate smoothing)
     >,
-    10 // Heartbeat update interval = 10ms
->;
+  10  // Heartbeat update interval = 10ms
+  >;
 
-eva::Joystick<CleanedPinReader> joystick;
-
-void setup() {
-    Serial.begin(9600);
-}
-
-void loop() {
-    eva::tac(); // Drive update chain
-    
-    signed short output = joystick.getValue(); // Cleaned signal in -1000..1000 range
-}
+class App : public eva::Heartbeat {
+  eva::Joystick<CleanedPinReader> joystick;
+public:
+  App()
+    : eva::Heartbeat(100) {}
+  void onHeartbeat() {
+    signed short output = joystick.getValue();
+    //...
+  }
+};
 ```
 
 ---
 
-## Ecosystem
+ All storage is statically sized through template parameters, or through runtime parameters of the same name.
 
-`EVA Filters` is part of the **Extremely Versatile Architecture** ecosystem:
-- **EVA Core / Survival Kit**: [eva-core-sk](https://github.com/agusevtec/eva-core-sk)
-- **EVA Motors**: [eva-motors](https://github.com/agusevtec/eva-motors)
-- **EVA Boxy**: [eva-boxy](https://github.com/agusevtec/eva-boxy)
+## Installation
 
----
+Using Arduino Library Manager
+
+Open Arduino IDE
+
+Go to Sketch -> Include Library -> Manage Libraries
+
+Search for "eva-filters"
+
+Click Install
 
 ## License
 

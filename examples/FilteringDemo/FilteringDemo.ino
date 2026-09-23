@@ -3,7 +3,7 @@
 #include <evaStdReaders.h>
 
 // Filter headers
-#include <evafExpAdaptiveAverage.h>
+#include <evafAdaptiveAverage.h>
 #include <evafMedian.h>
 #include <evafOpenClose.h>
 #include <evafMinmax.h>
@@ -14,7 +14,7 @@
 // ============================================================================
 // FILTER SELECTION - change this line and recompile
 // ============================================================================
-using SelectedFilter = evaf::ExpAdaptiveAverage<eva::ValueReader, 10, 150>;
+using SelectedFilter = evaf::AdaptiveAverage<eva::ValueReader, 10, 150>;
 //using SelectedFilter = evaf::Median<eva::ValueReader, 3>;
 //using SelectedFilter = evaf::OpenClose<eva::ValueReader, 7>;
 //using SelectedFilter = evaf::Minmax<eva::ValueReader, 2>;

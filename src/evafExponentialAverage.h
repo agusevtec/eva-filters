@@ -60,8 +60,12 @@ namespace evaf
                 return raw;
             }
 
-            signed long diff = (signed long)raw * 1000 - mCurrentValue;
-            mCurrentValue += diff * (signed long)mAlpha / 1000;
+            signed long diff = ((signed long)raw * 1000 - mCurrentValue) * (signed long)mAlpha / 1000;
+
+            if (diff == 0)
+                mCurrentValue = (signed long)raw * 1000;
+            else
+                mCurrentValue += diff ;
 
             return static_cast<signed short>(mCurrentValue / 1000);
         }

@@ -13,7 +13,7 @@ namespace evaf
      * @tparam tIntervalMs Periodic update interval in milliseconds
      */
     template <class TReader, unsigned short tIntervalMs>
-    class Sampled : public virtual eva::Heartbeat, public TReader
+    class Sampled : private eva::Heartbeat, public TReader
     {
     private:
         signed short mCachedValue = 0;
