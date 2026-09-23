@@ -14,8 +14,6 @@ namespace evaf
      * Samples the input from TReader and applies median filtering
      * to remove spikes and impulse noise.
      *
-     * No input or output clamping is applied.
-     *
      * @tparam TReader Underlying reader class (must implement getValue())
      * @tparam tWindowSize Filter window size (odd number). Default: 5
      */

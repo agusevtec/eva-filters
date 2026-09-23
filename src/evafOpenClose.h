@@ -18,8 +18,6 @@ namespace evaf
      * - closing = erosion(dilation(x))
      * - output  = (opening + closing) / 2
      *
-     * No input or output clamping is applied.
-     *
      * @tparam TReader Underlying reader class (must implement getValue())
      * @tparam tWindowSize Filter window size (odd number). Default: 5
      */

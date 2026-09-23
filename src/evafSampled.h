@@ -7,8 +7,6 @@ namespace evaf
     /**
      * @brief Decorator that periodically polls an underlying TReader via Heartbeat and caches the result.
      *
-     * No input or output clamping is applied.
-     *
      * @tparam TReader Input signal reader type
      * @tparam tIntervalMs Periodic update interval in milliseconds
      */

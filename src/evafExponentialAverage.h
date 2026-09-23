@@ -10,8 +10,6 @@ namespace evaf
      * Formula: Y[k] = alpha * X[k] + (1 - alpha) * Y[k-1]
      * Uses fixed-point arithmetic (scaled by 1000) for fast execution on MCUs.
      *
-     * No input or output clamping is applied.
-     *
      * @tparam TReader Underlying reader class (must implement getValue())
      * @tparam tAlpha Smoothing factor from 1 to 1000 (1000 = no filtering, 100 = heavy smoothing)
      */

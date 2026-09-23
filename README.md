@@ -1,8 +1,8 @@
 # EVA Filters (eva-filters)
 
-C++ digital signal processing (DSP) library designed for the **EVA** ecosystem in Arduino.
+C++ Signal filtering library designed for the **EVA** ecosystem in Arduino.
 
-`EVA Filters` provides compile-time chainable filter decorators to clean, smooth, and constrain analog and digital signals. 
+`EVA Filters` provides compile-time chainable filter decorators to clean and smooth analog signals. 
 
 ---
 

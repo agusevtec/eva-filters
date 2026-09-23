@@ -16,8 +16,6 @@ namespace evaf
      * - maximin = max of chunk minimums (opening operation)
      * - output = (minimax + maximin) / 2
      *
-     * No input or output clamping is applied.
-     *
      * @tparam TReader Underlying reader class (must implement getValue())
      * @tparam N Number of chunks and chunk size (total buffer size = N * N)
      *

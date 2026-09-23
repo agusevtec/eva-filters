@@ -7,8 +7,6 @@ namespace evaf
     /**
      * @brief Reader decorator applying a moving average (sliding window) filter.
      *
-     * No input or output clamping is applied.
-     *
      * @tparam TReader Underlying reader class (must implement getValue())
      * @tparam N Window size (number of values to average). Must be >= 1.
      *

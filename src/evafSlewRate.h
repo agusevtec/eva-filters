@@ -9,8 +9,6 @@ namespace evaf
      *
      * Prevents sharp steps by capping maximum delta per call tick.
      *
-     * No input or output clamping is applied.
-     *
      * @tparam TReader Underlying reader class (must implement getValue())
      * @tparam tMaxStepPerTick Maximum allowed change per call tick. Default: 50
      */
