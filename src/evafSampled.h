@@ -8,9 +8,9 @@ namespace evaf
      * @brief Decorator that periodically polls an underlying TReader via Heartbeat and caches the result.
      *
      * @tparam TReader Input signal reader type
-     * @tparam tIntervalMs Periodic update interval in milliseconds
+     * @tparam tIntervalMs Periodic update interval in milliseconds (default 1000 ms)
      */
-    template <class TReader, unsigned short tIntervalMs>
+    template <class TReader, unsigned short tIntervalMs = 1000>
     class Sampled : private eva::Heartbeat, public TReader
     {
     private:
